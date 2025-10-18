@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+.env
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+pip-log.txt
+pip-delete-this-directory.txt
+.idea/
+.vscode/
+.DS_Store
