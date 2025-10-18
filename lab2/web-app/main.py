@@ -7,7 +7,7 @@ from pymilvus import connections, Collection, CollectionSchema, FieldSchema, Dat
 import redis
 
 MILVUS_HOST = os.getenv('MILVUS_HOST', 'localhost')
-MILVUS_PORT = os.getenv('MILVUS_PORT', '19530')
+MILVUS_PORT = int(os.getenv('MILVUS_PORT', '19530'))
 
 COLLECTION_NAME = "demo_collection"
 VECTOR_SIZE = 128
