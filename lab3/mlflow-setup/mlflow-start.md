@@ -1,6 +1,6 @@
 mlflow server \
-  --backend-store-uri sqlite:////root/mlflow_data/db/mlflow.db \
-  --default-artifact-root file:///root/mlflow_data/artifacts \
+  --backend-store-uri sqlite:////var/lib/mlflow/db/mlflow.db \
+  --default-artifact-root file:///var/lib/mlflow/artifacts \
   --host 0.0.0.0 \
   --port 5000 \
   --allowed-hosts mlflow.labs.itmo.loc,10.100.0.8,10.100.0.9,localhost,127.0.0.1 \
@@ -13,3 +13,4 @@ curl -v http://10.100.0.8:5000 -H "Host: mlflow.labs.itmo.loc"
 
 -------------------------------------------------------------------
 
+Все скрипты из папки mlflow-scripts запускаются на ВМ с mlflow в окружении mlflow-env
