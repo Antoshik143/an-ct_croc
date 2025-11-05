@@ -8,20 +8,15 @@ print("="*80)
 print("ДОБАВЛЕНИЕ АРТЕФАКТОВ К RUNS")
 print("="*80)
 
-# Отключаем предупреждения
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 warnings.filterwarnings('ignore')
 
-# ============================================================================
-# КОНФИГУРАЦИЯ
-# ============================================================================
 MLFLOW_TRACKING_URI = "http://127.0.0.1:5000"
 MLFLOW_HOST_HEADER = "mlflow.labs.itmo.loc"
 EXPERIMENT_NAME = "Iris Classification Training"
 
 os.environ['MLFLOW_TRACKING_INSECURE_TLS'] = "true"
 
-# Удаляем конфликтующие переменные если они есть
 if 'MLFLOW_TRACKING_SERVER_CERT_PATH' in os.environ:
     del os.environ['MLFLOW_TRACKING_SERVER_CERT_PATH']
 
@@ -35,16 +30,12 @@ print(f"  - Эксперимент: {EXPERIMENT_NAME}")
 
 import requests
 
-# Сохраняем оригинальный __init__
 original_session_init = requests.Session.__init__
 
-# Создаем патченную версию
 def patched_session_init(self, *args, **kwargs):
     original_session_init(self, *args, **kwargs)
-    # Добавляем Host заголовок
     self.headers.update({'Host': MLFLOW_HOST_HEADER})
 
-# Применяем патч
 requests.Session.__init__ = patched_session_init
 
 import mlflow
@@ -53,9 +44,6 @@ from mlflow.tracking import MlflowClient
 mlflow.set_tracking_uri(uri=MLFLOW_TRACKING_URI)
 client = MlflowClient(tracking_uri=MLFLOW_TRACKING_URI)
 
-# ============================================================================
-# ПОЛУЧЕНИЕ СПИСКА RUNS
-# ============================================================================
 
 print("\n" + "="*80)
 print("ПОЛУЧЕНИЕ СПИСКА RUNS")
@@ -81,9 +69,6 @@ except Exception as e:
     traceback.print_exc()
     exit(1)
 
-# ============================================================================
-# ДОБАВЛЕНИЕ АРТЕФАКТОВ
-# ============================================================================
 
 print("\n" + "="*80)
 print("ДОБАВЛЕНИЕ АРТЕФАКТОВ")
@@ -91,7 +76,6 @@ print("="*80)
 
 MODELS_DIR = os.path.join(tempfile.gettempdir(), "mlflow_models")
 
-# Устанавливаем эксперимент для start_run
 mlflow.set_experiment(experiment_name=EXPERIMENT_NAME)
 
 for run in runs:
@@ -118,7 +102,6 @@ for run in runs:
 
         with mlflow.start_run(run_id=run.info.run_id):
 
-            # 1. model_info.json
             model_info = {
                 "model_type": metadata["model_type"],
                 "framework": metadata["framework"],
@@ -137,7 +120,6 @@ for run in runs:
             mlflow.log_artifact(temp_file, artifact_path="model_info")
             print(f"  ✓ model_info.json логирован")
 
-            # 2. requirements.txt
             requirements = "scikit-learn>=1.0.0\nmlflow>=2.0.0\npandas>=1.0.0\nnumpy>=1.0.0"
             req_file = os.path.join(tempfile.gettempdir(), f"requirements_{run.info.run_id}.txt")
             with open(req_file, 'w') as f:
@@ -146,7 +128,6 @@ for run in runs:
             mlflow.log_artifact(req_file, artifact_path="requirements")
             print(f"  ✓ requirements.txt логирован")
 
-            # 3. metrics.csv
             import csv
             metrics_data = {
                 "metric": ["accuracy", "precision", "recall", "f1_score"],
@@ -167,7 +148,6 @@ for run in runs:
             mlflow.log_artifact(csv_file, artifact_path="metrics")
             print(f"  ✓ metrics.csv логирован")
 
-            # 4. model_config.json
             config_file = os.path.join(tempfile.gettempdir(), f"config_{run.info.run_id}.json")
             with open(config_file, 'w') as f:
                 json.dump(metadata["parameters"], f, indent=2)
@@ -175,7 +155,6 @@ for run in runs:
             mlflow.log_artifact(config_file, artifact_path="model_config")
             print(f"  ✓ model_config.json логирован")
 
-            # 5. Модель pickle
             if os.path.exists(model_file):
                 import shutil
                 temp_model = os.path.join(tempfile.gettempdir(), f"model_{run.info.run_id}.pkl")
@@ -189,9 +168,6 @@ for run in runs:
         import traceback
         traceback.print_exc()
 
-# ============================================================================
-# ПРОВЕРКА АРТЕФАКТОВ
-# ============================================================================
 
 print("\n" + "="*80)
 print("ПРОВЕРКА АРТЕФАКТОВ")

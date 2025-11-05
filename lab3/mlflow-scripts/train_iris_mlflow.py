@@ -10,25 +10,18 @@ print("="*80)
 print("MLFLOW IRIS CLASSIFICATION - ОБУЧЕНИЕ НА ВМ")
 print("="*80)
 
-# Отключаем предупреждения
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 warnings.filterwarnings('ignore')
 
-# ============================================================================
-# КОНФИГУРАЦИЯ
-# ============================================================================
 
-# ✅ ПРАВИЛЬНАЯ конфигурация переменных окружения
 os.environ['MLFLOW_TRACKING_INSECURE_TLS'] = "true"
 
-# Удаляем конфликтующие переменные
 if 'MLFLOW_TRACKING_SERVER_CERT_PATH' in os.environ:
     del os.environ['MLFLOW_TRACKING_SERVER_CERT_PATH']
 
 os.environ["CURL_CA_BUNDLE"] = ""
 os.environ["REQUESTS_CA_BUNDLE"] = ""
 
-# Локальная папка для моделей
 MODELS_DIR = os.path.join(tempfile.gettempdir(), "mlflow_models")
 os.makedirs(MODELS_DIR, exist_ok=True)
 
@@ -36,9 +29,6 @@ print(f"\n[КОНФИГУРАЦИЯ]")
 print(f"  - SSL проверка: отключена")
 print(f"  - Папка для моделей: {MODELS_DIR}")
 
-# ============================================================================
-# НАСТРОЙКА MLFLOW С HOST ЗАГОЛОВКОМ
-# ============================================================================
 
 MLFLOW_TRACKING_URI = "http://127.0.0.1:5000"
 MLFLOW_HOST_HEADER = "mlflow.labs.itmo.loc"
@@ -71,9 +61,6 @@ print(f"  - Tracking URI: {MLFLOW_TRACKING_URI}")
 print(f"  - Host Header: {MLFLOW_HOST_HEADER}")
 print(f"  - Эксперимент: {EXPERIMENT_NAME}")
 
-# ============================================================================
-# ПОДГОТОВКА ДАННЫХ
-# ============================================================================
 
 iris = load_iris()
 X = iris.data
@@ -87,9 +74,6 @@ print(f"\n[ДАТАСЕТ]")
 print(f"  - Train: {X_train.shape}")
 print(f"  - Test:  {X_test.shape}")
 
-# ============================================================================
-# ОБУЧЕНИЕ LOGISTIC REGRESSION
-# ============================================================================
 
 print("\n" + "="*80)
 print("ШАГ 1: ОБУЧЕНИЕ LOGISTIC REGRESSION")
@@ -117,9 +101,6 @@ print(f"  - Precision: {precision:.4f}")
 print(f"  - Recall:    {recall:.4f}")
 print(f"  - F1-score:  {f1:.4f}")
 
-# ============================================================================
-# ЛОГИРОВАНИЕ В MLFLOW
-# ============================================================================
 
 print("\n" + "="*80)
 print("ШАГ 2: ЛОГИРОВАНИЕ В MLFLOW")
@@ -148,9 +129,6 @@ except Exception as e:
     traceback.print_exc()
     raise
 
-# ============================================================================
-# СОХРАНЕНИЕ МОДЕЛИ ЛОКАЛЬНО
-# ============================================================================
 
 print("\n" + "="*80)
 print("ШАГ 3: СОХРАНЕНИЕ МОДЕЛИ ЛОКАЛЬНО")
@@ -163,7 +141,6 @@ with open(model_lr_path, 'wb') as f:
 print(f"\n✓ Logistic Regression сохранена")
 print(f"  - Путь: {model_lr_path}")
 
-# Сохраняем метаданные
 metadata_lr = {
     "model_name": "iris_logistic_regression",
     "model_type": "LogisticRegression",
@@ -189,9 +166,6 @@ with open(metadata_lr_path, 'w') as f:
 print(f"✓ Метаданные сохранены")
 print(f"  - Путь: {metadata_lr_path}")
 
-# ============================================================================
-# ЗАГРУЗКА И ТЕСТИРОВАНИЕ
-# ============================================================================
 
 print("\n" + "="*80)
 print("ШАГ 4: ТЕСТИРОВАНИЕ МОДЕЛИ")
@@ -219,9 +193,6 @@ except Exception as e:
     print(f"\n✗ ОШИБКА при загрузке: {e}")
     raise
 
-# ============================================================================
-# ОБУЧЕНИЕ RANDOM FOREST
-# ============================================================================
 
 print("\n" + "="*80)
 print("ШАГ 5: ОБУЧЕНИЕ RANDOM FOREST")
@@ -249,7 +220,6 @@ print(f"  - Precision: {precision_rf:.4f}")
 print(f"  - Recall:    {recall_rf:.4f}")
 print(f"  - F1-score:  {f1_rf:.4f}")
 
-# Логирование
 try:
     with mlflow.start_run(run_name="RandomForest_Iris") as run:
         mlflow.log_params(params_rf)
@@ -271,7 +241,6 @@ except Exception as e:
     print(f"\n✗ ОШИБКА: {e}")
     raise
 
-# Сохраняем модель
 model_rf_path = os.path.join(MODELS_DIR, "iris_random_forest.pkl")
 with open(model_rf_path, 'wb') as f:
     pickle.dump(rf_model, f)
@@ -279,7 +248,6 @@ with open(model_rf_path, 'wb') as f:
 print(f"\n✓ Random Forest сохранена")
 print(f"  - Путь: {model_rf_path}")
 
-# Метаданные
 metadata_rf = {
     "model_name": "iris_random_forest",
     "model_type": "RandomForestClassifier",

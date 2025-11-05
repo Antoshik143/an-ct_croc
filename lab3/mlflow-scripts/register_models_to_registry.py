@@ -8,13 +8,9 @@ print("="*80)
 print("РЕГИСТРАЦИЯ МОДЕЛЕЙ В MLFLOW MODEL REGISTRY")
 print("="*80)
 
-# Отключаем предупреждения
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 warnings.filterwarnings('ignore')
 
-# ============================================================================
-# КОНФИГУРАЦИЯ
-# ============================================================================
 
 os.environ['MLFLOW_TRACKING_INSECURE_TLS'] = "true"
 
@@ -33,9 +29,6 @@ print(f"  - Tracking URI: {MLFLOW_TRACKING_URI}")
 print(f"  - Host Header: {MLFLOW_HOST_HEADER}")
 print(f"  - Эксперимент: {EXPERIMENT_NAME}")
 
-# ============================================================================
-# ПАТЧИМ requests ПЕРЕД импортом mlflow
-# ============================================================================
 
 import requests
 
@@ -47,9 +40,6 @@ def patched_session_init(self, *args, **kwargs):
 
 requests.Session.__init__ = patched_session_init
 
-# ============================================================================
-# ИМПОРТИРУЕМ MLFLOW
-# ============================================================================
 
 import mlflow
 from mlflow.tracking import MlflowClient
@@ -60,9 +50,6 @@ import pickle
 mlflow.set_tracking_uri(uri=MLFLOW_TRACKING_URI)
 client = MlflowClient(tracking_uri=MLFLOW_TRACKING_URI)
 
-# ============================================================================
-# ПОЛУЧАЕМ ПОСЛЕДНИЕ RUNS
-# ============================================================================
 
 print("\n" + "="*80)
 print("ПОЛУЧЕНИЕ ПОСЛЕДНИХ RUNS")
@@ -76,11 +63,9 @@ try:
 
     print(f"\n✓ Эксперимент найден: {experiment.name} (ID: {experiment.experiment_id})")
 
-    # Получаем ALL runs
     runs = client.search_runs(experiment_ids=[experiment.experiment_id])
     print(f"✓ Найдено runs: {len(runs)}")
 
-    # Фильтруем только последние версии моделей
     latest_lr = None
     latest_rf = None
 
@@ -102,9 +87,6 @@ except Exception as e:
     traceback.print_exc()
     exit(1)
 
-# ============================================================================
-# РЕГИСТРИРУЕМ МОДЕЛИ
-# ============================================================================
 
 print("\n" + "="*80)
 print("РЕГИСТРАЦИЯ МОДЕЛЕЙ В MODEL REGISTRY")
@@ -112,31 +94,23 @@ print("="*80)
 
 models_registered = []
 
-# ============================================================================
-# РЕГИСТРИРУЕМ LOGISTIC REGRESSION
-# ============================================================================
 
 if latest_lr:
     print(f"\n[LogisticRegression_Iris]")
 
     try:
-        # Переходим в контекст run'а
         with mlflow.start_run(run_id=latest_lr.info.run_id):
 
-            # Загружаем метаданные
             MODELS_DIR = os.path.join(tempfile.gettempdir(), "mlflow_models")
             metadata_file = os.path.join(MODELS_DIR, "iris_logistic_regression_metadata.json")
 
             with open(metadata_file, 'r') as f:
                 metadata = json.load(f)
 
-            # Загружаем модель
             model_file = os.path.join(MODELS_DIR, "iris_logistic_regression.pkl")
             with open(model_file, 'rb') as f:
                 model = pickle.load(f)
 
-            # Логируем модель используя mlflow.sklearn.log_model()
-            # Это АВТОМАТИЧЕСКИ регистрирует её в Model Registry
             model_info = mlflow.sklearn.log_model(
                 sk_model=model,
                 artifact_path="model",
@@ -160,30 +134,23 @@ if latest_lr:
         import traceback
         traceback.print_exc()
 
-# ============================================================================
-# РЕГИСТРИРУЕМ RANDOM FOREST
-# ============================================================================
 
 if latest_rf:
     print(f"\n[RandomForest_Iris]")
 
     try:
-        # Переходим в контекст run'а
         with mlflow.start_run(run_id=latest_rf.info.run_id):
 
-            # Загружаем метаданные
             MODELS_DIR = os.path.join(tempfile.gettempdir(), "mlflow_models")
             metadata_file = os.path.join(MODELS_DIR, "iris_random_forest_metadata.json")
 
             with open(metadata_file, 'r') as f:
                 metadata = json.load(f)
 
-            # Загружаем модель
             model_file = os.path.join(MODELS_DIR, "iris_random_forest.pkl")
             with open(model_file, 'rb') as f:
                 model = pickle.load(f)
 
-            # Логируем модель
             model_info = mlflow.sklearn.log_model(
                 sk_model=model,
                 artifact_path="model",
@@ -207,25 +174,19 @@ if latest_rf:
         import traceback
         traceback.print_exc()
 
-# ============================================================================
-# ПЕРЕВОДИМ МОДЕЛИ В PRODUCTION
-# ============================================================================
 
 print("\n" + "="*80)
 print("ПЕРЕХОД МОДЕЛЕЙ В PRODUCTION")
 print("="*80)
 
 try:
-    # Логическая регрессия в Production
     if latest_lr:
         print(f"\n[LogisticRegression_Iris]")
 
-        # Получаем последнюю версию
         lr_model = client.get_latest_versions("iris-logistic-regression", stages=["None"])
         if lr_model:
             latest_version = lr_model[0].version
 
-            # Переводим в Production
             client.transition_model_version_stage(
                 name="iris-logistic-regression",
                 version=latest_version,
@@ -234,16 +195,13 @@ try:
 
             print(f"  ✓ Версия {latest_version} → Production")
 
-    # Random Forest в Production
     if latest_rf:
         print(f"\n[RandomForest_Iris]")
 
-        # Получаем последнюю версию
         rf_model = client.get_latest_versions("iris-random-forest", stages=["None"])
         if rf_model:
             latest_version = rf_model[0].version
 
-            # Переводим в Production
             client.transition_model_version_stage(
                 name="iris-random-forest",
                 version=latest_version,
@@ -257,9 +215,6 @@ except Exception as e:
     import traceback
     traceback.print_exc()
 
-# ============================================================================
-# ВЫВОДИМ СТАТУС
-# ============================================================================
 
 print("\n" + "="*80)
 print("СТАТУС МОДЕЛЕЙ В REGISTRY")
