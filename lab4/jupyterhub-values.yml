@@ -1,0 +1,16 @@
+proxy:
+  secretToken: "generate-any-random-string"
+  https:
+    enabled: false
+
+hub:
+  config:
+    JupyterHub:
+      authenticator_class: dummy
+    DummyAuthenticator:
+      password: admin
+
+singleuser:
+  image:
+    name: jupyter/minimal-notebook
+    tag: latest
